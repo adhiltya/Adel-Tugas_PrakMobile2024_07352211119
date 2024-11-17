@@ -1,0 +1,113 @@
+import 'dart:async';
+
+enum Role { Admin, Customer }
+
+class Product {
+  String productName; // Nama produk
+  double price; // Harga produk
+  bool inStock; // Status ketersediaan produk
+  String category; // Kategori produk (sepatu/pakaian)
+
+  Product({
+    required this.productName,
+    required this.price,
+    required this.inStock,
+    required this.category,
+  });
+}
+
+class User {
+  String name; // Nama pengguna
+  int age; // Usia pengguna
+  late List<Product> products;
+  Role? role; 
+
+  User({
+    required this.name,
+    required this.age,
+    List<Product>? products,
+    this.role,
+  }) {
+    this.products = products ?? []; // Inisialisasi produk dengan daftar kosong jika tidak ada
+  }
+}
+
+class AdminUser  extends User {
+  AdminUser ({
+    required String name,
+    required int age,
+  }) : super(name: name, age: age, role: Role.Admin);
+
+  void addProduct(Product product) {
+    if (product.inStock) {
+      products.add(product);
+      print('Produk "${product.productName}" berhasil ditambahkan.');
+    } else {
+      throw Exception('Tidak dapat menambahkan produk "${product.productName}" - stok habis.');
+    }
+  }
+
+  void removeProduct(String productName) {
+    products.removeWhere((product) => product.productName == productName);
+    print('Produk "$productName" berhasil dihapus.');
+  }
+}
+  
+class CustomerUser  extends User {
+  CustomerUser ({
+    required String name,
+    required int age,
+  }) : super(name: name, age: age, role: Role.Customer);
+
+  void viewProducts() {
+    if (products.isEmpty) {
+
+      print('Tidak ada produk yang tersedia.');
+    } else {
+      print('Produk yang tersedia:');
+      for (var product in products) {
+        print('- ${product.productName} (Kategori: ${product.category}, Harga: \$${product.price}, Tersedia: ${product.inStock})');
+      }
+    }
+  }
+
+  
+}
+
+// Fungsi asinkron untuk mengambil detail produk
+Future<Product> fetchProductDetails(String productName, String category) async {
+  // Simulasi penundaan pengambilan data
+  await Future.delayed(Duration(seconds: 2));
+  return Product(productName: productName, price: 49.99, inStock: true, category: category);
+}
+
+void main() async {
+  // Membuat pengguna Admin
+  AdminUser  admin = AdminUser (name: 'Alice', age: 30);
+  
+  // Menambahkan produk menggunakan fungsi asinkron
+  try {
+    Product newShoe = await fetchProductDetails('Sepatu Lari', 'Sepatu');
+    admin.addProduct(newShoe);
+
+    Product newShirt = await fetchProductDetails('Kaos', 'Pakaian');
+    admin.addProduct(newShirt);
+  } catch (e) {
+    print(e);
+  }
+
+  // Membuat pengguna Customer
+  CustomerUser  customer = CustomerUser (name: 'Bobi', age: 25);
+  
+  // Menyalin produk dari Admin ke Customer
+  customer.products = admin.products;
+
+  // Melihat produk sebagai Customer
+  customer.viewProducts();
+
+  // Menghapus produk sebagai Admin
+  admin.removeProduct('Sepatu Lari');
+  
+  // Melihat produk setelah penghapusan
+  customer.viewProducts();
+}
