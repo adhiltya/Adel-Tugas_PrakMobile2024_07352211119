@@ -1,0 +1,129 @@
+class ProdukDigital {
+  String namaProduk;
+  double harga;
+  String kategori;
+
+  ProdukDigital({
+    required this.namaProduk,
+    required this.harga,
+    required this.kategori,
+  });
+
+  void terapkanDiskon(double persenDiskon) {
+    harga -= harga * (persenDiskon / 100);
+    print('Harga setelah diskon untuk $namaProduk: \$${harga.toStringAsFixed(2)}');
+  }
+}
+
+abstract class Karyawan {
+  void bekerja(); 
+}
+
+class KaryawanTetap extends Karyawan {
+  String nama;
+  int umur;
+  String peran;
+
+  KaryawanTetap(this.nama, {required this.umur, required this.peran});
+
+
+
+
+  @override
+  void bekerja() {
+    print('$nama, Karyawan Tetap, sedang bekerja.');
+  }
+}
+
+class KaryawanKontrak extends Karyawan {
+  String nama;
+  int umur;
+  String peran;
+
+  KaryawanKontrak(this.nama, {required this.umur, required this.peran});
+
+  @override
+  void bekerja() {
+    print('$nama, Karyawan Kontrak, sedang bekerja.');
+  }
+}
+
+mixin Kinerja {
+  int produktivitas = 100; 
+
+  void tingkatkanProduktivitas() {
+    if (produktivitas < 85) {
+      produktivitas += 5; 
+    }
+  }
+}
+
+class KaryawanManager extends Karyawan with Kinerja {
+  String nama;
+  int umur;
+  String peran;
+
+  KaryawanManager(this.nama, {required this.umur, required this.peran});
+
+  @override
+  void bekerja() {
+    print('$nama, Karyawan Manager, sedang bekerja dengan produktivitas $produktivitas.');
+    if (produktivitas < 85) {
+      print('Produktivitas kurang dari 85, meningkatkan produktivitas.');
+      tingkatkanProduktivitas();
+    }
+  }
+}
+
+enum FaseProyek {
+  Perencanaan,
+  Pengembangan,
+  Evaluasi,
+}
+
+class Perusahaan {
+  List<Karyawan> karyawanAktif = [];
+  List<Karyawan> karyawanNonAktif = [];
+  final int maxKaryawanAktif = 20;
+
+  void tambahKaryawan(Karyawan karyawan) {
+    if (karyawanAktif.length < maxKaryawanAktif) {
+      karyawanAktif.add(karyawan);
+      print('${karyawan.runtimeType} telah ditambahkan sebagai karyawan aktif.');
+    } else {
+      print('Batas maksimal karyawan aktif telah tercapai.');
+    }
+  }
+
+  void resignKaryawan(Karyawan karyawan) {
+    if (karyawanAktif.contains(karyawan)) {
+      karyawanAktif.remove(karyawan);
+      karyawanNonAktif.add(karyawan);
+      print('${karyawan.runtimeType} telah resign dan sekarang menjadi karyawan non-aktif.');
+    } else {
+      print('Karyawan tidak ditemukan dalam daftar karyawan aktif.');
+    }
+  }
+}
+
+void main() {
+  ProdukDigital produk = ProdukDigital(namaProduk: 'Software Network Automation', harga: 150.0, kategori: 'Software');
+  produk.terapkanDiskon(10); // Menerapkan diskon 10%
+
+  KaryawanTetap karyawanTetap = KaryawanTetap('Alice', umur: 30, peran: 'Developer');
+  KaryawanKontrak karyawanKontrak = KaryawanKontrak('Bobi', umur: 25, peran: 'Designer');
+  KaryawanManager karyawanManager = KaryawanManager('Charlie', umur: 40, peran: 'Manager');
+
+  karyawanTetap.bekerja();
+  karyawanKontrak.bekerja();
+  karyawanManager.bekerja();
+
+  Perusahaan perusahaan = Perusahaan();
+  perusahaan.tambahKaryawan(karyawanTetap);
+  perusahaan.tambahKaryawan(karyawanKontrak);
+  perusahaan.tambahKaryawan(karyawanManager);
+  perusahaan.tambahKaryawan(karyawanManager); 
+
+  perusahaan.resignKaryawan(karyawanTetap);
+  perusahaan.resignKaryawan(karyawanTetap);
+}
