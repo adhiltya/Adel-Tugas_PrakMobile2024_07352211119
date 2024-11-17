@@ -1,0 +1,163 @@
+import 'dart:collection';
+
+// Enum untuk fase proyek
+enum FaseProyek { Perencanaan, Pengembangan, Evaluasi }
+
+// Kelas pengecualian khusus
+class ProyekException implements Exception {
+  final String message;
+  ProyekException(this.message);
+
+  @override
+  String toString() => 'ProyekException: $message';
+}
+
+// Mixin untuk evaluasi kinerja karyawan
+mixin KinerjaMixin {
+  int produktivitas = 0;
+  DateTime? lastUpdate;
+
+  void updateProduktivitas(int nilai) {
+    final now = DateTime.now();
+    if (lastUpdate != null && now.difference(lastUpdate!).inDays < 30) {
+      throw ProyekException('Produktivitas hanya dapat diperbarui setiap 30 hari.');
+    }
+    if (nilai < 0 || nilai > 100) {
+      throw ProyekException('Produktivitas harus di antara 0 hingga 100.');
+    }
+    produktivitas = nilai;
+    lastUpdate = now;
+  }
+}
+
+// Enum untuk peran karyawan
+enum PeranKaryawan { Developer, NetworkEngineer, Manager }
+
+// Kelas Karyawan dasar
+abstract class Karyawan with KinerjaMixin {
+  final String nama;
+  final int umur;
+  final PeranKaryawan peran;
+
+  Karyawan({required this.nama, required this.umur, required this.peran});
+}
+
+// Kelas KaryawanTetap dan KaryawanKontrak
+class KaryawanTetap extends Karyawan {
+  KaryawanTetap({required String nama, required int umur, required PeranKaryawan peran})
+      : super(nama: nama, umur: umur, peran: peran);
+}
+
+class KaryawanKontrak extends Karyawan {
+  KaryawanKontrak({required String nama, required int umur, required PeranKaryawan peran})
+      : super(nama: nama, umur: umur, peran: peran);
+}
+
+// Kelas Proyek
+class Proyek {
+  FaseProyek fase = FaseProyek.Perencanaan;
+  int jumlahHariBerjalan = 0;
+  List<Karyawan> timProyek = [];
+
+  // Tambah karyawan ke proyek
+  void tambahKaryawan(Karyawan karyawan) {
+    timProyek.add(karyawan);
+    print('Karyawan ${karyawan.nama} telah ditambahkan ke proyek.');
+  }
+
+  // Transisi ke fase berikutnya jika syarat terpenuhi
+  void transisiFase() {
+    if (fase == FaseProyek.Perencanaan && timProyek.length >= 5) {
+      fase = FaseProyek.Pengembangan;
+      print('Proyek telah beralih ke fase Pengembangan.');
+    } else if (fase == FaseProyek.Pengembangan && jumlahHariBerjalan > 45) {
+      fase = FaseProyek.Evaluasi;
+      print('Proyek telah beralih ke fase Evaluasi.');
+    } else {
+      throw ProyekException('Syarat untuk beralih fase belum terpenuhi.');
+    }
+  }
+
+  // Menambah hari berjalan proyek
+  void tambahHari(int hari) {
+    jumlahHariBerjalan += hari;
+    print('Proyek berjalan selama $jumlahHariBerjalan hari.');
+  }
+}
+
+// Kelas manajemen untuk karyawan aktif dan non-aktif
+class ManajemenKaryawan {
+  List<Karyawan> karyawanAktif = [];
+  List<Karyawan> karyawanNonAktif = [];
+
+  // Menambahkan karyawan ke dalam tim aktif
+  void tambahKaryawan(Karyawan karyawan) {
+    if (karyawanAktif.length >= 20) {
+      throw Exception('Karyawan aktif sudah mencapai batas maksimum.');
+    }
+    karyawanAktif.add(karyawan);
+    print('Karyawan ${karyawan.nama} ditambahkan ke daftar karyawan aktif.');
+  }
+
+  // Mengubah status karyawan menjadi non-aktif
+  void resignKaryawan(Karyawan karyawan) {
+    if (karyawanAktif.contains(karyawan)) {
+      karyawanAktif.remove(karyawan);
+      karyawanNonAktif.add(karyawan);
+      print('Karyawan ${karyawan.nama} telah berubah status menjadi non-aktif.');
+    }
+  }
+}
+
+void main() {
+  // Inisialisasi manajemen karyawan dan proyek
+  var manajemenKaryawan = ManajemenKaryawan();
+  var proyek = Proyek();
+
+  // Menambahkan karyawan
+  var karyawan1 = KaryawanTetap(nama: 'Alice', umur: 30, peran: PeranKaryawan.Developer);
+  var karyawan2 = KaryawanKontrak(nama: 'Bob', umur: 35, peran: PeranKaryawan.Manager);
+  var karyawan3 = KaryawanTetap(nama: 'Charlie', umur: 28, peran: PeranKaryawan.NetworkEngineer);
+  var karyawan4 = KaryawanTetap(nama: 'David', umur: 40, peran: PeranKaryawan.Manager);
+  var karyawan5 = KaryawanKontrak(nama: 'Eve', umur: 29, peran: PeranKaryawan.Developer);
+
+  // Menambahkan karyawan ke daftar aktif
+  manajemenKaryawan.tambahKaryawan(karyawan1);
+  manajemenKaryawan.tambahKaryawan(karyawan2);
+  manajemenKaryawan.tambahKaryawan(karyawan3);
+  manajemenKaryawan.tambahKaryawan(karyawan4);
+  manajemenKaryawan.tambahKaryawan(karyawan5);
+
+  // Menambahkan karyawan ke tim proyek
+  proyek.tambahKaryawan(karyawan1);
+  proyek.tambahKaryawan(karyawan2);
+  proyek.tambahKaryawan(karyawan3);
+  proyek.tambahKaryawan(karyawan4);
+  proyek.tambahKaryawan(karyawan5);
+
+  // Menambah hari berjalan untuk proyek
+  proyek.tambahHari(10);
+  proyek.transisiFase();
+
+  // Menambah hari lagi untuk proyek dan mencoba transisi ke Evaluasi
+  proyek.tambahHari(40);
+  try {
+    proyek.transisiFase();
+  } catch (e) {
+    print(e);
+  }
+
+  // Memperbarui produktivitas dan mencoba perubahan
+  try {
+    karyawan2.updateProduktivitas(90);
+    print('Produktivitas karyawan ${karyawan2.nama} adalah ${karyawan2.produktivitas}');
+  } catch (e) {
+    print(e);
+  }
+
+  // Karyawan resign
+  manajemenKaryawan.resignKaryawan(karyawan1);
+  print('Karyawan aktif: ${manajemenKaryawan.karyawanAktif.length}');
+  print('Karyawan non-aktif: ${manajemenKaryawan.karyawanNonAktif.length}');
+}
+
